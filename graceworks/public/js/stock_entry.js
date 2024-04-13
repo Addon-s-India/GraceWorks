@@ -21,4 +21,53 @@ frappe.ui.form.on("Stock Entry", {
             };
         });
     },
+    validate: function (frm) {
+        if (!check_qty_items(frm)) {
+            frappe.validated = false;
+        }
+    },
 });
+
+frappe.ui.form.on("Stock Entry Detail", {
+    qty: function (frm, cdt, cdn) {
+        // qty should not be greater then actual qty
+        var d = locals[cdt][cdn];
+        if (d.qty > d.actual_qty) {
+            frappe.msgprint(
+                "Quantity should not be greater than actual quantity - " +
+                    d.actual_qty
+            );
+            frappe.model.set_value(cdt, cdn, "qty", d.actual_qty);
+        }
+    },
+});
+
+function check_qty_items(frm) {
+    var items = frm.doc.items;
+    var invalidRows = []; // Array to store the indices of invalid rows
+
+    // Loop through each item in the items table
+    for (var i = 0; i < items.length; i++) {
+        if (items[i].qty > items[i].actual_qty) {
+            // Push the row number (i + 1 for 1-based index) and the item code to the invalidRows array
+            invalidRows.push(
+                `<br> <b> Row ${i + 1} </b> (Item Code: ${
+                    items[i].item_code
+                }) Actual Qty: ${items[i].actual_qty}`
+            );
+        }
+    }
+
+    // Check if there are any invalid rows
+    if (invalidRows.length > 0) {
+        // Join all entries in invalidRows array into a single string separated by comma
+        var msg = invalidRows.join(", ");
+        // Display the message to the user
+        frappe.msgprint(
+            "Quantity should not be greater than actual quantity. Check:                          \n" +
+                msg
+        );
+        return false; // Return false to indicate validation failure
+    }
+    return true; // Return true if all rows are valid
+}
