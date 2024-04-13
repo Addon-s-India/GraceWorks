@@ -39,7 +39,7 @@ def custom_stock_entry_type_query(doctype, txt, searchfield, start, page_len, fi
     return frappe.db.sql("""
         SELECT name
         FROM `tabStock Entry Type`
-        WHERE name = 'Material Issue'
+        WHERE name = 'Material Issue' OR name = 'Material Transfer'
             AND (name LIKE %(txt)s OR {key} LIKE %(txt)s)
             {mcond}
         ORDER BY
