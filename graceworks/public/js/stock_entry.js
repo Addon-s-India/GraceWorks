@@ -15,5 +15,10 @@ frappe.ui.form.on("Stock Entry", {
                 filters: { from_warehouse: frm.doc.from_warehouse },
             };
         });
+        frm.set_query("stock_entry_type", function () {
+            return {
+                query: "graceworks.stock_entry.custom_stock_entry_type_query",
+            };
+        });
     },
 });

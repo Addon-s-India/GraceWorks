@@ -1,5 +1,6 @@
 import frappe
 from frappe.utils import logger
+from erpnext.controllers.queries import get_match_cond
 
 logger.set_log_level('DEBUG')
 logger = frappe.logger("graceworks", allow_site=True, file_count=10)
@@ -24,6 +25,31 @@ def custom_item_query(doctype, txt, searchfield, start, page_len, filters):
         LIMIT %(start)s, %(page_len)s
     """, {
         'warehouse': from_warehouse,
+        'txt': "%{}%".format(txt),
+        '_txt': txt.replace("%", ""),
+        'start': start,
+        'page_len': page_len
+    })
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def custom_stock_entry_type_query(doctype, txt, searchfield, start, page_len, filters):
+    # give only "Material Issue" in the query result
+    return frappe.db.sql("""
+        SELECT name
+        FROM `tabStock Entry Type`
+        WHERE name = 'Material Issue'
+            AND (name LIKE %(txt)s OR {key} LIKE %(txt)s)
+            {mcond}
+        ORDER BY
+            IF(LOCATE(%(_txt)s, name), LOCATE(%(_txt)s, name), 99999),
+            name
+        LIMIT %(start)s, %(page_len)s
+    """.format(**{
+        'key': searchfield,
+        'mcond': get_match_cond(doctype)
+    }), {
         'txt': "%{}%".format(txt),
         '_txt': txt.replace("%", ""),
         'start': start,
