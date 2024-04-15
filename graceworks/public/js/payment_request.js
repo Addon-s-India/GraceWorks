@@ -1,14 +1,20 @@
 frappe.ui.form.on("Payment Request", {
     onload: function (frm) {
         console.log("onload");
-        if (frm.doc.reference_doctype == "Purchase Order") {
+        if (
+            frm.doc.reference_doctype == "Purchase Order" &&
+            frm.docstatus == 0
+        ) {
             read_only(frm);
             update_amount_po(frm);
         }
     },
     refresh: function (frm) {
         console.log("refresh");
-        if (frm.doc.reference_doctype == "Purchase Order") {
+        if (
+            frm.doc.reference_doctype == "Purchase Order" &&
+            frm.docstatus == 0
+        ) {
             read_only(frm);
             update_amount_po(frm);
         }
