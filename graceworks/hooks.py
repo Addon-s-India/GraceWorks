@@ -28,9 +28,11 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Purchase Order" : "public/js/purchase_order.js",
-              "Stock Entry": "public/js/stock_entry.js",
-              }
+doctype_js = {
+    "Purchase Order" : "public/js/purchase_order.js",
+    "Stock Entry": "public/js/stock_entry.js",
+    "Payment Request": "public/js/payment_request.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -133,7 +135,8 @@ doctype_js = {"Purchase Order" : "public/js/purchase_order.js",
 # }
 doc_events = {
     "Purchase Order": {
-        "before_submit": "graceworks.purchase_order.po_before_submit"
+        "before_submit": "graceworks.purchase_order.po_before_submit",
+        "on_update": "graceworks.purchase_order.po_before_update",
     }
 }
 

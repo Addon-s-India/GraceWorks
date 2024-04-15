@@ -9,3 +9,14 @@ def po_before_submit(doc, method):
     # for item in doc.items:
     #     if or item.image or not item.custom_image_1 or not item.custom_image_2:
     #         frappe.throw("Please attach the image before submission")
+
+
+def po_before_update(doc, method):
+    # check if the custom_attach_file field is set or not if not then throw error and stop submission
+    if doc.workflow_state == "Review":
+        if not doc.custom_attach_file:
+            frappe.throw("Please attach the file before submission")
+            # change the status to Pending
+            doc.workflow_state = "Pending"
+            doc.save()
+        
