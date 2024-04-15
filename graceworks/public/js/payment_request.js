@@ -3,7 +3,7 @@ frappe.ui.form.on("Payment Request", {
         console.log("onload");
         if (
             frm.doc.reference_doctype == "Purchase Order" &&
-            frm.docstatus == 0
+            frm.doc.docstatus == 0
         ) {
             read_only(frm);
             update_amount_po(frm);
@@ -13,7 +13,7 @@ frappe.ui.form.on("Payment Request", {
         console.log("refresh");
         if (
             frm.doc.reference_doctype == "Purchase Order" &&
-            frm.docstatus == 0
+            frm.doc.docstatus == 0
         ) {
             read_only(frm);
             update_amount_po(frm);
