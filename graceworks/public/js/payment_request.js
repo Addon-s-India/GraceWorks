@@ -7,6 +7,7 @@ frappe.ui.form.on("Payment Request", {
         ) {
             read_only(frm);
             update_amount_po(frm);
+            fetch_po_date(frm);
         }
     },
     refresh: function (frm) {
@@ -17,7 +18,11 @@ frappe.ui.form.on("Payment Request", {
         ) {
             read_only(frm);
             update_amount_po(frm);
+            fetch_po_date(frm);
         }
+    },
+    reference_name: function (frm) {
+        fetch_po_date(frm);
     },
     custom_type_of_amount: function (frm) {
         update_amount_po(frm);
@@ -189,5 +194,29 @@ function check_grand_total(frm) {
     if (frm.doc.grand_total <= 0) {
         frappe.msgprint("Grand Total should be greater than 0");
         frappe.validated = false;
+    }
+}
+
+function fetch_po_date(frm) {
+    console.log("fetch_po_date");
+    if (
+        frm.doc.reference_doctype === "Purchase Order" &&
+        frm.doc.reference_name &&
+        frm.doc.docstatus !== 1
+    ) {
+        console.log("fetch_po_date condition true");
+        // fetch the date from the purchase order using the reference name
+        frappe.call({
+            method: "frappe.client.get",
+            args: {
+                doctype: "Purchase Order",
+                name: frm.doc.reference_name,
+            },
+            callback: function (r) {
+                if (r.message) {
+                    frm.set_value("custom_po_date", r.message.transaction_date);
+                }
+            },
+        });
     }
 }

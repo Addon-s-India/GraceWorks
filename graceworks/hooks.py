@@ -137,7 +137,10 @@ doc_events = {
     "Purchase Order": {
         "before_submit": "graceworks.purchase_order.po_before_submit",
         "on_update": "graceworks.purchase_order.po_before_update",
-    }
+    },
+    "File": {
+        "on_trash": "graceworks.file.on_delete"
+    },
 }
 
 # Scheduled Tasks
