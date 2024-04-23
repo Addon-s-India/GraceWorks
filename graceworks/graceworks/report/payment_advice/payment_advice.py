@@ -40,7 +40,7 @@ def get_columns(filters):
             "fieldname": "name",
             "fieldtype": "Link",
             "options": "Payment Request",
-            "width": 300
+            "width": 240
         },
         {
             "label": _("Advance Request Date"),
@@ -53,20 +53,20 @@ def get_columns(filters):
             "fieldname": "project",
             "fieldtype": "Link",
             "options": "Project",
-            "width": 200
+            "width": 150
         },
         {
             "label": _("Vendor Name"),
             "fieldname": "party_name",
             "fieldtype": "Data",
-            "width": 200
+            "width": 230
         },
         {
             "label": _("PO No"),
             "fieldname": "reference_name",
             "fieldtype": "Link",
             "options": "Purchase Order",
-            "width": 300
+            "width": 450
         },
         {
             "label": _("PO Date"),
@@ -175,7 +175,7 @@ def get_data(filters):
                             left join
                                 `tabSupplier` su on pr.party = su.name
                             left join
-                                `tabPayment Entry Reference` per on pr.name = per.reference_name
+                                `tabPayment Entry Reference` per on po.name = per.reference_name
                             left join
                                 `tabPayment Entry` pe on per.parent = pe.name
                             where
