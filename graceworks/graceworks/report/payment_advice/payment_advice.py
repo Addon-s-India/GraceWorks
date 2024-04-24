@@ -155,7 +155,7 @@ def get_data(filters):
                                 pr.name,
                                 pr.transaction_date,
                                 pr.project,
-                                su.supplier_name as part_name,
+                                su.supplier_name as party_name,
                                 pr.reference_name,
                                 po.transaction_date as po_date,
                                 po.grand_total as po_amount,

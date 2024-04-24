@@ -6,8 +6,10 @@ frappe.ui.form.on("Purchase Order", {
     },
     onload: function (frm) {
         mandatory_fields(frm);
+        toggle_required(frm);
     },
     refresh: function (frm) {
+        toggle_required(frm);
         mandatory_fields(frm);
         fetch_material_item_qty(frm);
     },
@@ -73,4 +75,16 @@ function fetch_material_item_qty(frm) {
             });
         }
     }
+}
+
+function toggle_required(frm) {
+    frm.toggle_reqd("project", true);
+    frm.toggle_reqd("set_warehouse", true);
+    frm.toggle_reqd("schedule_date", true);
+    frm.toggle_reqd("custom_reference_no", true);
+    frm.toggle_reqd("custom_reference_date", true);
+    frm.toggle_reqd("custom_contact_person_at_site", true);
+
+    // make the rate field in item table mandatory
+    frm.fields_dict.items.grid.toggle_reqd("rate", true);
 }

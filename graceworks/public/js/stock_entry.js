@@ -8,6 +8,7 @@ frappe.ui.form.on("Stock Entry", {
         });
     },
     onload: function (frm) {
+        toggle_required(frm);
         frm.toggle_reqd("from_warehouse", true);
         frm.set_query("item_code", "items", function () {
             return {
@@ -25,6 +26,9 @@ frappe.ui.form.on("Stock Entry", {
         if (!check_qty_items(frm)) {
             frappe.validated = false;
         }
+    },
+    refresh: function (frm) {
+        toggle_required(frm);
     },
 });
 
@@ -70,4 +74,11 @@ function check_qty_items(frm) {
         return false; // Return false to indicate validation failure
     }
     return true; // Return true if all rows are valid
+}
+
+function toggle_required(frm) {
+    frm.toggle_reqd("custom_issued_to", true);
+    frm.toggle_reqd("company", true);
+    frm.toggle_reqd("custom_request_number", true);
+    frm.toggle_reqd("posting_date", true);
 }

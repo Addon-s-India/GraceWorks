@@ -8,12 +8,17 @@ frappe.query_reports["Order Status"] = {
             label: __("From Date (PO)"),
             fieldtype: "Date",
             reqd: 1,
+            default: frappe.datetime.add_months(
+                frappe.datetime.get_today(),
+                -1
+            ),
         },
         {
             fieldname: "to_date_po",
             label: __("To Date (PO)"),
             fieldtype: "Date",
             reqd: 1,
+            default: frappe.datetime.get_today(),
         },
         {
             fieldname: "supplier",
@@ -35,14 +40,32 @@ frappe.query_reports["Order Status"] = {
             fieldname: "po_status",
             label: __("PO Status"),
             fieldtype: "Select",
-            options:
-                "\nDraft\nSubmitted\nCancelled\nClosed\nTo Bill\nTo Receive",
+            options: [
+                "",
+                "Draft",
+                "On Hold",
+                "To Receive and Bill",
+                "To Bill",
+                "To Receive",
+                "Completed",
+                "Cancelled",
+                "Closed",
+                "Delivered",
+            ],
         },
         {
             fieldname: "receipt_status",
             label: __("Purchase Receipt Status"),
             fieldtype: "Select",
-            options: "\nDraft\nSubmitted\nCancelled",
+            options: [
+                "",
+                "Draft",
+                "To Bill",
+                "Completed",
+                "Return Issued",
+                "Cancelled",
+                "Closed",
+            ],
         },
     ],
 };

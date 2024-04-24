@@ -1,5 +1,6 @@
 frappe.ui.form.on("Payment Request", {
     onload: function (frm) {
+        frm.toggle_reqd("transaction_date", true);
         console.log("onload");
         if (
             frm.doc.reference_doctype == "Purchase Order" &&
@@ -11,6 +12,7 @@ frappe.ui.form.on("Payment Request", {
         }
     },
     refresh: function (frm) {
+        frm.toggle_reqd("transaction_date", true);
         console.log("refresh");
         if (
             frm.doc.reference_doctype == "Purchase Order" &&

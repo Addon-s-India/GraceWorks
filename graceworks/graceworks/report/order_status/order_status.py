@@ -196,8 +196,8 @@ def get_data(filters):
                     po.status as delivery_status,
                     receipt.name as grn_no,
                     receipt.posting_date as grn_date,
-                    receipt_item.qty as qty_received,
-                    po_item.qty - receipt_item.qty as qty_balance_to_receive,
+                    receipt_item.received_qty as qty_received,
+                    (po_item.qty - receipt_item.received_qty) as qty_balance_to_receive,
                     receipt_item.custom_invoice_quantity as balance_purchase_invoice_qty,
                     receipt.custom_total_invoice_amount as balance_purchase_invoice_value
                 from
