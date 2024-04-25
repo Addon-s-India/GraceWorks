@@ -27,6 +27,18 @@ frappe.query_reports["Order Status"] = {
             options: "Supplier",
         },
         {
+            fieldname: "project",
+            label: __("Project"),
+            fieldtype: "Link",
+            options: "Project",
+        },
+        {
+            fieldname: "Company",
+            label: __("Company"),
+            fieldtype: "Link",
+            options: "Company",
+        },
+        {
             fieldname: "from_date_receipt",
             label: __("From Date (Receipt)"),
             fieldtype: "Date",

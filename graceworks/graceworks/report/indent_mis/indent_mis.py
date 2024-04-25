@@ -327,12 +327,12 @@ def get_data(filters):
                     po.name as po_name,
                     po.status as po_status,
                     po.transaction_date as po_date,
-                    datediff(mr.transaction_date, po.transaction_date) as diff_indent_po_date,
+                    datediff(po.transaction_date, mr.transaction_date) as diff_indent_po_date,
                     po_item.qty as po_qty,
                     po_item.taxable_value as po_net_total,
                     (po_item.taxable_value + po_item.igst_amount + po_item.cgst_amount + po_item.sgst_amount) as po_grand_total,
                     (po_item.igst_amount + po_item.cgst_amount + po_item.sgst_amount) as tax_amount,
-                    (po_item.qty - mr_item.qty) as balance_to_order,
+                    (mr_item.qty - po_item.qty) as balance_to_order,
                     su.supplier_name as party_name,
                     pr.transaction_date as advance_requested_date,
                     pe.paid_amount as advance_approved,
@@ -348,11 +348,11 @@ def get_data(filters):
                     mr.custom_budget_amount as budget_amount,
                     po.custom_site_indent_number as site_indent_no,
                     (mr_item.qty - po_item.qty) as balance_indent_qty,
-                    (mr.creation - mr.modified) as diff_indent_creation_approval,
-                    (mr.transaction_date - po.transaction_date) as diff_indent_po,
+                    datediff(mr.modified, mr.creation) as diff_indent_creation_approval,
+                    datediff(po.transaction_date, mr.transaction_date) as diff_indent_po,
                     (po_item.qty - po_item.received_qty) as variance,
                     purc.custom_total_invoice_amount as purchase_invoice_value,
-                    (purc.custom_total_invoice_amount - purc.grand_total) as purchase_invoice_value
+                    (purc.grand_total - purc.custom_total_invoice_amount) as balance_purchase_invoice_value
                 from
                     `tabMaterial Request` mr
                 left join

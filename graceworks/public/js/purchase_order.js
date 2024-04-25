@@ -78,7 +78,7 @@ function fetch_material_item_qty(frm) {
 }
 
 function toggle_required(frm) {
-    frm.toggle_reqd("project", true);
+    // frm.toggle_reqd("project", true);
     frm.toggle_reqd("set_warehouse", true);
     frm.toggle_reqd("schedule_date", true);
     frm.toggle_reqd("custom_reference_no", true);
@@ -87,4 +87,5 @@ function toggle_required(frm) {
 
     // make the rate field in item table mandatory
     frm.fields_dict.items.grid.toggle_reqd("rate", true);
+    frm.fields_dict.items.grid.toggle_reqd("project", true);
 }

@@ -24,6 +24,10 @@ def get_conditions(filters):
         conditions += f" AND po.transaction_date <= '{filters.get('to_date_po')}'"
     if filters.get("supplier"):
         conditions += f" AND po.supplier = '{filters.get('supplier')}'"
+    if filters.get("project"):
+        conditions += f" AND po_item.project = '{filters.get('project')}'"
+    if filters.get("company"):
+        conditions += f" AND po.company = '{filters.get('company')}'"
     if filters.get("from_date_receipt"):
         conditions += f" AND receipt.posting_date >= '{filters.get('from_date_receipt')}'"
     if filters.get("to_date_receipt"):
@@ -151,6 +155,12 @@ def get_columns(filters):
             "width": 120
         },
         {
+            "label": _("Total Qty Received in PO"),
+            "fieldname": "total_received_qty_in_po",
+            "fieldtype": "Float",
+            "width": 120
+        },
+        {
             "label": _("Qty Balance To Receive"),
             "fieldname": "qty_balance_to_receive",
             "fieldtype": "Float",
@@ -197,7 +207,33 @@ def get_data(filters):
                     receipt.name as grn_no,
                     receipt.posting_date as grn_date,
                     receipt_item.received_qty as qty_received,
-                    (po_item.qty - receipt_item.received_qty) as qty_balance_to_receive,
+                    (po_item.qty - (
+                        select sum(received_qty) 
+                        from `tabPurchase Receipt Item` 
+                        where 
+                            purchase_order = po.name 
+                            and parent in (
+                                select name 
+                                from `tabPurchase Receipt` 
+                                where 
+                                    docstatus = 1 
+                                    and posting_date <= receipt.posting_date
+                                    and posting_time <= receipt.posting_time
+                            )
+                    )) as qty_balance_to_receive,
+                    (select sum(received_qty) 
+                        from `tabPurchase Receipt Item` 
+                        where 
+                            purchase_order = po.name 
+                            and parent in (
+                                select name 
+                                from `tabPurchase Receipt` 
+                                where 
+                                    docstatus = 1 
+                                    and posting_date <= receipt.posting_date
+                                    and posting_time <= receipt.posting_time
+                            )
+                    ) as total_received_qty_in_po,
                     receipt_item.custom_invoice_quantity as balance_purchase_invoice_qty,
                     receipt.custom_total_invoice_amount as balance_purchase_invoice_value
                 from
@@ -212,6 +248,10 @@ def get_data(filters):
                     and receipt_item.docstatus = 1
                     {conditions}
                 """, as_dict=1)
+
+    
+    return item_data
+
 
     
     return item_data

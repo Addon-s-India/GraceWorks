@@ -25,6 +25,7 @@ frappe.ui.form.on("Payment Request", {
     },
     reference_name: function (frm) {
         fetch_po_date(frm);
+        fetch_project(frm);
     },
     custom_type_of_amount: function (frm) {
         update_amount_po(frm);
@@ -217,6 +218,8 @@ function fetch_po_date(frm) {
             callback: function (r) {
                 if (r.message) {
                     frm.set_value("custom_po_date", r.message.transaction_date);
+                    const project_value = r.message.items[0].project;
+                    frm.set_value("project", project_value);
                 }
             },
         });
