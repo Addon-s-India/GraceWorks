@@ -30,7 +30,7 @@ def get_conditions(filters):
     if filters.get("budget_code"):
         conditions += f" AND mr.custom_budget_code = '{filters.get('budget_code')}'"
     if filters.get("project"):
-        conditions += f" AND pr.project = '{filters.get('project')}'"
+        conditions += f" AND mr.custom_project = '{filters.get('project')}'"
     if filters.get("indent_status"):
         conditions += f" AND mr.status = '{filters.get('indent_status')}'"
     if filters.get("po_status"):
@@ -314,76 +314,71 @@ def get_data(filters):
     condition = get_conditions(filters)
     
     data = frappe.db.sql(f"""
-                select
-                    mr.name as name,
-                    mr.status as mr_status,
-                    mr.transaction_date as transaction_date,
-                    mr_item.item_group as item_group,
-                    mr_item.item_code as item_code,
-                    mr_item.item_name as item_name,
-                    mr_item.description as item_description,
-                    mr_item.uom as uom,
-                    mr_item.qty as indent_qty,
-                    po.name as po_name,
-                    po.status as po_status,
-                    po.transaction_date as po_date,
-                    datediff(po.transaction_date, mr.transaction_date) as diff_indent_po_date,
-                    po_item.qty as po_qty,
-                    po_item.taxable_value as po_net_total,
-                    (po_item.taxable_value + po_item.igst_amount + po_item.cgst_amount + po_item.sgst_amount) as po_grand_total,
-                    (po_item.igst_amount + po_item.cgst_amount + po_item.sgst_amount) as tax_amount,
-                    (mr_item.qty - po_item.qty) as balance_to_order,
-                    su.supplier_name as party_name,
-                    pr.transaction_date as advance_requested_date,
-                    pe.paid_amount as advance_approved,
-                    pe.posting_date as advance_paid_date,
-                    pe.total_allocated_amount as advance_paid,
-                    po.custom_delivery_days as po_delivery_days,
-                    po.status as delivery_status,
-                    po_item.received_qty as qty_received,
-                    (po_item.qty - po_item.received_qty) as qty_balance_to_received,
-                    purc.remarks as remarks,
-                    mr.status as indent_status,
-                    mr.custom_budget_code as budget_code,
-                    mr.custom_budget_amount as budget_amount,
-                    po.custom_site_indent_number as site_indent_no,
-                    (mr_item.qty - po_item.qty) as balance_indent_qty,
-                    datediff(mr.modified, mr.creation) as diff_indent_creation_approval,
-                    datediff(po.transaction_date, mr.transaction_date) as diff_indent_po,
-                    (po_item.qty - po_item.received_qty) as variance,
-                    purc.custom_total_invoice_amount as purchase_invoice_value,
-                    (purc.grand_total - purc.custom_total_invoice_amount) as balance_purchase_invoice_value
-                from
-                    `tabMaterial Request` mr
-                left join
-                    `tabMaterial Request Item` mr_item on mr.name = mr_item.parent
-                left join
-                    `tabPurchase Order Item` po_item on mr.name = po_item.material_request and mr_item.item_code = po_item.item_code
-                left join
-                    `tabPurchase Order` po on po_item.parent = po.name
-                left join
-                    `tabSupplier` su on po.supplier = su.name
-                left join
-                    `tabPurchase Receipt Item` purc_item on po.name = purc_item.purchase_order
-                left join
-                    `tabPurchase Receipt` purc on purc_item.parent = purc.name
-                left join
-                    `tabPayment Request` pr on po.name = pr.reference_name
-                left join
-                    `tabPayment Entry Reference` pe_re on po.name = pe_re.reference_name
-                left join
-                    `tabPayment Entry` pe on pe_re.parent = pe.name
-                where
-                    mr.status not in ('Draft', 'Cancelled')
-                    and purc.docstatus = 1
-                    and po.docstatus = 1
-                    and mr.docstatus = 1
-                    and pr.docstatus = 1
-                    and pe.docstatus = 1
-                    {condition}
-                order by
-                    mr.transaction_date desc
-            """, as_dict=1)
+        select
+            mr.name as name,
+            mr.status as mr_status,
+            mr.transaction_date as transaction_date,
+            mr_item.item_group as item_group,
+            mr_item.item_code as item_code,
+            mr_item.item_name as item_name,
+            mr_item.description as item_description,
+            mr_item.uom as uom,
+            mr_item.qty as indent_qty,
+            po.name as po_name,
+            po.status as po_status,
+            po.transaction_date as po_date,
+            datediff(po.transaction_date, mr.transaction_date) as diff_indent_po_date,
+            po_item.qty as po_qty,
+            po_item.taxable_value as po_net_total,
+            (po_item.taxable_value + po_item.igst_amount + po_item.cgst_amount + po_item.sgst_amount) as po_grand_total,
+            (po_item.igst_amount + po_item.cgst_amount + po_item.sgst_amount) as tax_amount,
+            (mr_item.qty - coalesce(po_item.qty, 0)) as balance_to_order,
+            su.supplier_name as party_name,
+            pr.transaction_date as advance_requested_date,
+            pe.paid_amount as advance_approved,
+            pe.posting_date as advance_paid_date,
+            pe.total_allocated_amount as advance_paid,
+            po.custom_delivery_days as po_delivery_days,
+            po.status as delivery_status,
+            po_item.received_qty as qty_received,
+            (coalesce(po_item.qty, 0) - coalesce(po_item.received_qty, 0)) as qty_balance_to_received,
+            purc.remarks as remarks,
+            mr.status as indent_status,
+            mr.custom_budget_code as budget_code,
+            mr.custom_budget_amount as budget_amount,
+            po.custom_site_indent_number as site_indent_no,
+            (mr_item.qty - coalesce(po_item.qty, 0)) as balance_indent_qty,
+            datediff(mr.modified, mr.creation) as diff_indent_creation_approval,
+            datediff(po.transaction_date, mr.transaction_date) as diff_indent_po,
+            (coalesce(po_item.qty, 0) - coalesce(po_item.received_qty, 0)) as variance,
+            purc.custom_total_invoice_amount as purchase_invoice_value,
+            (purc.grand_total - purc.custom_total_invoice_amount) as balance_purchase_invoice_value
+        from
+            `tabMaterial Request` mr
+        left join
+            `tabMaterial Request Item` mr_item on mr.name = mr_item.parent
+        left outer join
+            `tabPurchase Order Item` po_item on mr.name = po_item.material_request and mr_item.item_code = po_item.item_code
+        left outer join
+            `tabPurchase Order` po on po_item.parent = po.name
+        left outer join
+            `tabSupplier` su on po.supplier = su.name
+        left outer join
+            `tabPurchase Receipt Item` purc_item on po.name = purc_item.purchase_order
+        left outer join
+            `tabPurchase Receipt` purc on purc_item.parent = purc.name
+        left outer join
+            `tabPayment Request` pr on po.name = pr.reference_name
+        left outer join
+            `tabPayment Entry Reference` pe_re on po.name = pe_re.reference_name
+        left outer join
+            `tabPayment Entry` pe on pe_re.parent = pe.name
+        where
+            mr.docstatus = 1
+            {condition}
+        order by
+            mr.transaction_date desc
+    """, as_dict=1)
     
     # loop through the rows and get the first purchase receipt date and latest purchase receipt date where  purchase receipt item's field purchase order value is equal to the purchase order name 
     for row in data:

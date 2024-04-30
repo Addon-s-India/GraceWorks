@@ -170,17 +170,16 @@ def get_data(filters):
                                 (pr.transaction_date - pe.posting_date) as payment_delay_in_days
                             from
                                 `tabPayment Request` pr
-                            left join
+                            left outer join
                                 `tabPurchase Order` po on pr.reference_name = po.name
-                            left join
+                            left outer join
                                 `tabSupplier` su on pr.party = su.name
-                            left join
+                            left outer join
                                 `tabPayment Entry Reference` per on po.name = per.reference_name
-                            left join
+                            left outer join
                                 `tabPayment Entry` pe on per.parent = pe.name
                             where
                                 pr.docstatus = 1
-                                and pe.docstatus = 1
                                 {condition}
                             """, as_dict=1)
                                 

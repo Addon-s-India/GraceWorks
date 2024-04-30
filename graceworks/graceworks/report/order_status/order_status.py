@@ -173,7 +173,7 @@ def get_columns(filters):
             "width": 150
         },
         {
-            "label": _("Balance Purchase Invoice Value"),
+            "label": _("Purchase Invoice Value"),
             "fieldname": "balance_purchase_invoice_value",
             "fieldtype": "Currency",
             "width": 150
@@ -200,7 +200,7 @@ def get_data(filters):
                     po_item.qty as ordered_qty,
                     po_item.schedule_date as due_date_of_delivery,
                     po_item.base_net_amount as po_value_net_total,
-                    po.custom_delivery_days as po_delivery_days,
+                    po.custom_delivery_period as po_delivery_days,
                     (COALESCE(po_item.cgst_amount, 0) + COALESCE(po_item.sgst_amount, 0)) as tax_amount,
                     (po_item.base_net_amount + COALESCE(po_item.cgst_amount, 0) + COALESCE(po_item.sgst_amount, 0)) as po_value_grand_total,
                     po.status as delivery_status,
@@ -238,14 +238,11 @@ def get_data(filters):
                     receipt.custom_total_invoice_amount as balance_purchase_invoice_value
                 from
                     `tabPurchase Order` po
-                    left join `tabPurchase Order Item` po_item on po.name = po_item.parent
-                    left join `tabPurchase Receipt Item` receipt_item on po.name = receipt_item.purchase_order
-                    left join `tabPurchase Receipt` receipt on receipt_item.parent = receipt.name
+                    left outer join `tabPurchase Order Item` po_item on po.name = po_item.parent
+                    left outer join `tabPurchase Receipt Item` receipt_item on po.name = receipt_item.purchase_order
+                    left outer join `tabPurchase Receipt` receipt on receipt_item.parent = receipt.name
                 where
                     po.docstatus = 1
-                    and po_item.docstatus = 1
-                    and receipt.docstatus = 1
-                    and receipt_item.docstatus = 1
                     {conditions}
                 """, as_dict=1)
 
