@@ -239,7 +239,7 @@ def get_data(filters):
                 from
                     `tabPurchase Order` po
                     left outer join `tabPurchase Order Item` po_item on po.name = po_item.parent
-                    left outer join `tabPurchase Receipt Item` receipt_item on po.name = receipt_item.purchase_order
+                    left outer join `tabPurchase Receipt Item` receipt_item on po.name = receipt_item.purchase_order and po_item.item_code = receipt_item.item_code
                     left outer join `tabPurchase Receipt` receipt on receipt_item.parent = receipt.name
                 where
                     po.docstatus = 1

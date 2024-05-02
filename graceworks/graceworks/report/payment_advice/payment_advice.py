@@ -87,6 +87,12 @@ def get_columns(filters):
             "width": 150
         },
         {
+            "label": _("PO Amount Used"),
+            "fieldname": "po_amount_used",
+            "fieldtype": "Currency",
+            "width": 150
+        },
+        {
             "label": _("Advance Requested Amount"),
             "fieldname": "advance_requested_amount",
             "fieldtype": "Currency",
@@ -163,11 +169,17 @@ def get_data(filters):
                                 pr.grand_total as advance_requested_amount,
                                 pr.transaction_date as advance_requested_date,
                                 pe.posting_date as advance_payment_date,
-                                pr.custom_amount_pending as balance_amount,
+                                (pr.custom_amount_pending + pr.grand_total) as po_amount_used,
+                                (pr.custom_amount_pending - pr.grand_total) as balance_amount,
                                 pr.grand_total as approved_amount,
                                 pe.paid_amount as paid_amount,
                                 (pr.grand_total - pe.paid_amount) as balance,
-                                (pr.transaction_date - pe.posting_date) as payment_delay_in_days
+                                datediff(pe.modified, pr.modified) as payment_delay_in_days,
+                                case
+                                    when pr.custom_add_amount_based_on = 'Percent' then pr.custom_percent_value
+                                    when pr.custom_add_amount_based_on = 'Lumpsum Amount' then pr.custom_lumpsum_amount
+                                    else null
+                                end as percentage_lumpsum
                             from
                                 `tabPayment Request` pr
                             left outer join
@@ -177,7 +189,7 @@ def get_data(filters):
                             left outer join
                                 `tabPayment Entry Reference` per on po.name = per.reference_name
                             left outer join
-                                `tabPayment Entry` pe on per.parent = pe.name
+                                `tabPayment Entry` pe on per.parent = pe.name and pe.reference_no = pr.name
                             where
                                 pr.docstatus = 1
                                 {condition}

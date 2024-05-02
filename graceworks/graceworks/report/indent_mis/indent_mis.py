@@ -149,30 +149,6 @@ def get_columns(filters):
             "width": 230
         },
         {
-            "label": "Advance Request Date",
-            "fieldname": "advance_requested_date",
-            "fieldtype": "Date",
-            "width": 150
-        },
-        {
-            "label": "Advance Approved",
-            "fieldname": "advance_approved",
-            "fieldtype": "Currency",
-            "width": 150
-        },
-        {
-            "label": "Advance Paid Date",
-            "fieldname": "advance_paid_date",
-            "fieldtype": "Date",
-            "width": 150
-        },
-        {
-            "label": "Advance Paid",
-            "fieldname": "advance_paid",
-            "fieldtype": "Currency",
-            "width": 150
-        },
-        {
             "label": "PO Delivery Days",
             "fieldname": "po_delivery_days",
             "fieldtype": "Data",
@@ -213,12 +189,6 @@ def get_columns(filters):
             "fieldname": "qty_balance_to_received",
             "fieldtype": "Float",
             "width": 150
-        },
-        {
-            "label": "Remarks",
-            "fieldname": "remarks",
-            "fieldtype": "Data",
-            "width": 230
         },
         {
             "label": "Indent Status",
@@ -297,12 +267,6 @@ def get_columns(filters):
             "fieldname": "purchase_invoice_value",
             "fieldtype": "Currency",
             "width": 150
-        },
-        {
-            "label": "Balance Purchase Invoice Value",
-            "fieldname": "balance_purchase_invoice_value",
-            "fieldtype": "Float",
-            "width": 150
         }
     ]
     
@@ -334,25 +298,18 @@ def get_data(filters):
             (po_item.igst_amount + po_item.cgst_amount + po_item.sgst_amount) as tax_amount,
             (mr_item.qty - coalesce(po_item.qty, 0)) as balance_to_order,
             su.supplier_name as party_name,
-            pr.transaction_date as advance_requested_date,
-            pe.paid_amount as advance_approved,
-            pe.posting_date as advance_paid_date,
-            pe.total_allocated_amount as advance_paid,
             po.custom_delivery_days as po_delivery_days,
             po.status as delivery_status,
             po_item.received_qty as qty_received,
             (coalesce(po_item.qty, 0) - coalesce(po_item.received_qty, 0)) as qty_balance_to_received,
-            purc.remarks as remarks,
             mr.status as indent_status,
             mr.custom_budget_code as budget_code,
             mr.custom_budget_amount as budget_amount,
-            po.custom_site_indent_number as site_indent_no,
+            mr.custom_site_indent_number as site_indent_no,
             (mr_item.qty - coalesce(po_item.qty, 0)) as balance_indent_qty,
-            datediff(mr.modified, mr.creation) as diff_indent_creation_approval,
-            datediff(po.transaction_date, mr.transaction_date) as diff_indent_po,
-            (coalesce(po_item.qty, 0) - coalesce(po_item.received_qty, 0)) as variance,
-            purc.custom_total_invoice_amount as purchase_invoice_value,
-            (purc.grand_total - purc.custom_total_invoice_amount) as balance_purchase_invoice_value
+            datediff(mr.modified, mr.transaction_date) as diff_indent_creation_approval,
+            datediff(mr.modified, po.transaction_date) as diff_indent_po,
+            (coalesce(po_item.qty, 0) - coalesce(po_item.received_qty, 0)) as variance
         from
             `tabMaterial Request` mr
         left join
@@ -363,16 +320,6 @@ def get_data(filters):
             `tabPurchase Order` po on po_item.parent = po.name
         left outer join
             `tabSupplier` su on po.supplier = su.name
-        left outer join
-            `tabPurchase Receipt Item` purc_item on po.name = purc_item.purchase_order
-        left outer join
-            `tabPurchase Receipt` purc on purc_item.parent = purc.name
-        left outer join
-            `tabPayment Request` pr on po.name = pr.reference_name
-        left outer join
-            `tabPayment Entry Reference` pe_re on po.name = pe_re.reference_name
-        left outer join
-            `tabPayment Entry` pe on pe_re.parent = pe.name
         where
             mr.docstatus = 1
             {condition}
@@ -404,6 +351,29 @@ def get_data(filters):
                                     purc_item.purchase_order = '{row.get('po_name')}'
                                 """, as_dict=1)
         
+        total_invoice_value = frappe.db.sql(f"""
+                                select
+                                    sum(purc.custom_total_invoice_amount) as total_invoice_value
+                                from
+                                    `tabPurchase Receipt` purc
+                                left join
+                                    `tabPurchase Receipt Item` purc_item on purc.name = purc_item.parent
+                                where
+                                    purc_item.purchase_order = '{row.get('po_name')}'
+                                """, as_dict=1)[0].get('total_invoice_value')
+        
+        total_purchase_receipt_invoice_qty = frappe.db.sql(f"""
+                                select
+                                    sum(purc_item.custom_invoice_quantity) as total_invoice_qty
+                                from
+                                    `tabPurchase Receipt` purc
+                                left join
+                                    `tabPurchase Receipt Item` purc_item on purc.name = purc_item.parent
+                                where
+                                    purc_item.purchase_order = '{row.get('po_name')}'
+                                    and purc_item.item_code = '{row.get('item_code')}'
+                                """, as_dict=1)
+        
         # check if the po_status is closed or not if it is closed than set po_closed to True else False and do the same for indent_status
         if row.get('po_status') == 'Closed':
             row.update({"po_closed": "Yes"})
@@ -418,7 +388,9 @@ def get_data(filters):
         row.update({
             "first_delivery_date": first_receipt_date[0].get('first_receipt_date'),
             "last_delivery_date": last_receipt_date[0].get('last_receipt_date'),
-            "calc_delivery_days": first_receipt_date[0].get('calc_delivery_days')
+            "calc_delivery_days": first_receipt_date[0].get('calc_delivery_days'),
+            "purchase_invoice_value": total_invoice_value or 0,
+            "purchase_invoice_qty": total_purchase_receipt_invoice_qty[0].get('total_invoice_qty') or 0
         })
     
     return data
