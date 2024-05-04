@@ -309,7 +309,8 @@ def get_data(filters):
             (mr_item.qty - coalesce(po_item.qty, 0)) as balance_indent_qty,
             datediff(mr.modified, mr.transaction_date) as diff_indent_creation_approval,
             datediff(mr.modified, po.transaction_date) as diff_indent_po,
-            (coalesce(po_item.qty, 0) - coalesce(po_item.received_qty, 0)) as variance
+            (coalesce(po_item.qty, 0) - coalesce(po_item.received_qty, 0)) as variance,
+            mr_item.actual_qty as balance_in_store
         from
             `tabMaterial Request` mr
         left join
