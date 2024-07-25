@@ -47,7 +47,8 @@ frappe.ui.form.on("Payment Request", {
             frm.set_value("custom_percent_value", 0);
         } else {
             // calculate the amount based on the custom_amount_from_po field
-            const amount = frm.doc.custom_amount_pending;
+            // const amount = frm.doc.custom_amount_pending;
+            const amount = frm.doc.custom_amount_from_po;
             const percent = frm.doc.custom_percent_value;
             console.log("amount :: ", amount);
             console.log("percent :: ", percent);
