@@ -10,7 +10,7 @@
    "_liked_by": null,
    "_user_tags": null,
    "creation": "2024-03-14 09:57:29.869262",
-   "default_value": null,
+   "default_value": 0,
    "doc_type": "Item Barcode",
    "docstatus": 0,
    "doctype_or_field": "DocField",
