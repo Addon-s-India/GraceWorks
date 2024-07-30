@@ -351,12 +351,12 @@
    "is_system_generated": 0,
    "is_virtual": 0,
    "label": "Remarks",
-<<<<<<< HEAD
+
    "length": 0,
    "link_filters": null,
-=======
+
    "length": 1000,
->>>>>>> 03e5252d4c329a155a612256b8cc52254a0aef1d
+
    "mandatory_depends_on": null,
    "modified": "2024-04-13 12:03:45.441603",
    "modified_by": "munir@addon-s.com",
