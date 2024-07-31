@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"5UrxjeZCGc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><i>GraceWorks</i></span>\",\"col\":12}},{\"id\":\"gio9QOF3ZG\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":6}},{\"id\":\"6U2XXoBVmZ\",\"type\":\"card\",\"data\":{\"card_name\":\"Warehouse & Projects\",\"col\":6}},{\"id\":\"BL96hQvsxR\",\"type\":\"card\",\"data\":{\"card_name\":\"Purchase & Payments\",\"col\":6}},{\"id\":\"ubgyMRe-ev\",\"type\":\"card\",\"data\":{\"card_name\":\"Inward Material & Issue\",\"col\":6}}]",
+ "content": "[{\"id\":\"5UrxjeZCGc\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h1\\\"><i>GraceWorks</i></span>\",\"col\":12}},{\"id\":\"gio9QOF3ZG\",\"type\":\"card\",\"data\":{\"card_name\":\"Masters\",\"col\":6}},{\"id\":\"6U2XXoBVmZ\",\"type\":\"card\",\"data\":{\"card_name\":\"Warehouse & Projects\",\"col\":6}},{\"id\":\"BL96hQvsxR\",\"type\":\"card\",\"data\":{\"card_name\":\"Purchase & Payments\",\"col\":6}},{\"id\":\"ubgyMRe-ev\",\"type\":\"card\",\"data\":{\"card_name\":\"Inward Material & Issue\",\"col\":6}},{\"id\":\"m87b79eVwp\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Payment Advice\",\"col\":3}}]",
  "creation": "2024-03-12 11:32:48.646234",
  "custom_blocks": [],
  "docstatus": 0,
@@ -191,8 +191,8 @@
    "type": "Link"
   }
  ],
- "modified": "2024-03-17 20:24:06.338532",
- "modified_by": "ritu@gmail.com",
+ "modified": "2024-07-30 14:35:49.603047",
+ "modified_by": "Administrator",
  "module": "GraceWorks",
  "name": "GraceWorks",
  "number_cards": [],
@@ -207,6 +207,14 @@
   }
  ],
  "sequence_id": 1.0,
- "shortcuts": [],
+ "shortcuts": [
+  {
+   "color": "Grey",
+   "doc_view": "List",
+   "label": "Payment Advice",
+   "link_to": "Payment Advice",
+   "type": "Report"
+  }
+ ],
  "title": "GraceWorks"
 }
