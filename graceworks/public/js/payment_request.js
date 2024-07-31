@@ -47,8 +47,9 @@ frappe.ui.form.on("Payment Request", {
             frm.set_value("custom_percent_value", 0);
         } else {
             // calculate the amount based on the custom_amount_from_po field
-            // const amount = frm.doc.custom_amount_pending;
-            const amount = frm.doc.custom_amount_from_po;
+            const amount = frm.doc.custom_type_of_amount == "Including Tax"
+                ? frm.doc.custom_amount_from_po
+                : frm.doc.custom_amount_from_po_excluding_tax;
             const percent = frm.doc.custom_percent_value;
             console.log("amount :: ", amount);
             console.log("percent :: ", percent);
@@ -67,7 +68,10 @@ frappe.ui.form.on("Payment Request", {
     },
     custom_lumpsum_amount: function (frm) {
         // calculate the amount based on the custom_amount_from_po field
-        if (frm.doc.custom_lumpsum_amount > frm.doc.custom_amount_pending) {
+        const amount = frm.doc.custom_type_of_amount == "Including Tax"
+            ? frm.doc.custom_amount_from_po
+            : frm.doc.custom_amount_from_po_excluding_tax;
+        if (frm.doc.custom_lumpsum_amount > amount) {
             frappe.throw(
                 "Lumpsum amount should not be greater than pending amount"
             );
@@ -104,7 +108,7 @@ function read_only(frm) {
 async function update_amount_po(frm) {
     try {
         let totalFromPO = 0;
-        let amountFromPOExloudingTax = 0;
+        let amountFromPOExcludingTax = 0;
         let amountFromPOIncludingTax = 0;
 
         const grandTotalRes = await frappe.db.get_value(
@@ -120,17 +124,17 @@ async function update_amount_po(frm) {
             frm.doc.reference_name,
             "total"
         );
-        amountFromPOExloudingTax = totalRes.message.total;
+        amountFromPOExcludingTax = totalRes.message.total;
         frm.set_value(
             "custom_amount_from_po_excluding_tax",
-            amountFromPOExloudingTax
+            amountFromPOExcludingTax
         );
 
         // Check the type of amount and fetch the corresponding total
         if (frm.doc.custom_type_of_amount == "Including Tax") {
             totalFromPO = amountFromPOIncludingTax;
         } else if (frm.doc.custom_type_of_amount == "Excluding Tax") {
-            totalFromPO = amountFromPOExloudingTax;
+            totalFromPO = amountFromPOExcludingTax;
         }
 
         // Fetch the grand totals from all submitted Payment Requests related to the PO
