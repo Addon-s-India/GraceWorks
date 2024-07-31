@@ -28,7 +28,13 @@ frappe.ui.form.on("Payment Request", {
         fetch_project(frm);
     },
     custom_type_of_amount: function (frm) {
-        update_amount_po(frm);
+        update_amount_po(frm).then(() => {
+            if (frm.doc.custom_add_amount_based_on == "Percent") {
+                update_grand_total_percent(frm);
+            } else {
+                update_grand_total_lumpsum(frm);
+            }
+        });
     },
     custom_add_amount_based_on: function (frm) {
         if (frm.doc.custom_add_amount_based_on == "Percent") {
@@ -46,40 +52,11 @@ frappe.ui.form.on("Payment Request", {
             frappe.msgprint("Percent should not be greater than 100");
             frm.set_value("custom_percent_value", 0);
         } else {
-            // calculate the amount based on the custom_amount_from_po field
-            const amount = frm.doc.custom_type_of_amount == "Including Tax"
-                ? frm.doc.custom_amount_from_po
-                : frm.doc.custom_amount_from_po_excluding_tax;
-            const percent = frm.doc.custom_percent_value;
-            console.log("amount :: ", amount);
-            console.log("percent :: ", percent);
-            const total = (amount * percent) / 100;
-            console.log("total :: ", total);
-            if (total > amount) {
-                frappe.throw(
-                    "Total amount should not be greater than pending amount"
-                );
-                frm.set_value("custom_percent_value", 0);
-                frm.set_value("grand_total", 0);
-            } else {
-                frm.set_value("grand_total", total);
-            }
+            update_grand_total_percent(frm);
         }
     },
     custom_lumpsum_amount: function (frm) {
-        // calculate the amount based on the custom_amount_from_po field
-        const amount = frm.doc.custom_type_of_amount == "Including Tax"
-            ? frm.doc.custom_amount_from_po
-            : frm.doc.custom_amount_from_po_excluding_tax;
-        if (frm.doc.custom_lumpsum_amount > amount) {
-            frappe.throw(
-                "Lumpsum amount should not be greater than pending amount"
-            );
-            frm.set_value("custom_lumpsum_amount", 0);
-            frm.set_value("grand_total", 0);
-        } else {
-            frm.set_value("grand_total", frm.doc.custom_lumpsum_amount);
-        }
+        update_grand_total_lumpsum(frm);
     },
     validate: function (frm) {
         if (!check_payment_request_pending_for_the_po(frm)) {
@@ -92,7 +69,6 @@ frappe.ui.form.on("Payment Request", {
 function read_only(frm) {
     // make amount field read only
     if (frm.doc.reference_doctype == "Purchase Order") {
-        // frm.toggle_enable("amount", false);
         frm.set_df_property("grand_total", "read_only", 1);
         if (
             (!frm.doc.custom_percent_value &&
@@ -163,6 +139,41 @@ async function update_amount_po(frm) {
         frappe.msgprint(
             "There was an error updating the payment amounts. Please check the console for more details."
         );
+    }
+}
+
+function update_grand_total_percent(frm) {
+    const amount = frm.doc.custom_type_of_amount == "Including Tax"
+        ? frm.doc.custom_amount_from_po
+        : frm.doc.custom_amount_from_po_excluding_tax;
+    const percent = frm.doc.custom_percent_value;
+    console.log("amount :: ", amount);
+    console.log("percent :: ", percent);
+    const total = (amount * percent) / 100;
+    console.log("total :: ", total);
+    if (total > amount) {
+        frappe.throw(
+            "Total amount should not be greater than pending amount"
+        );
+        frm.set_value("custom_percent_value", 0);
+        frm.set_value("grand_total", 0);
+    } else {
+        frm.set_value("grand_total", total);
+    }
+}
+
+function update_grand_total_lumpsum(frm) {
+    const amount = frm.doc.custom_type_of_amount == "Including Tax"
+        ? frm.doc.custom_amount_from_po
+        : frm.doc.custom_amount_from_po_excluding_tax;
+    if (frm.doc.custom_lumpsum_amount > amount) {
+        frappe.throw(
+            "Lumpsum amount should not be greater than pending amount"
+        );
+        frm.set_value("custom_lumpsum_amount", 0);
+        frm.set_value("grand_total", 0);
+    } else {
+        frm.set_value("grand_total", frm.doc.custom_lumpsum_amount);
     }
 }
 
