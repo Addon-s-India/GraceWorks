@@ -1,33 +1,27 @@
 frappe.ui.form.on("Payment Request", {
-    onload: function (frm) {
+    onload: function(frm) {
         frm.toggle_reqd("transaction_date", true);
         console.log("onload");
-        if (
-            frm.doc.reference_doctype == "Purchase Order" &&
-            frm.doc.docstatus == 0
-        ) {
+        if (frm.doc.reference_doctype == "Purchase Order" && frm.doc.docstatus == 0) {
             read_only(frm);
             update_amount_po(frm);
             fetch_po_date(frm);
         }
     },
-    refresh: function (frm) {
+    refresh: function(frm) {
         frm.toggle_reqd("transaction_date", true);
         console.log("refresh");
-        if (
-            frm.doc.reference_doctype == "Purchase Order" &&
-            frm.doc.docstatus == 0
-        ) {
+        if (frm.doc.reference_doctype == "Purchase Order" && frm.doc.docstatus == 0) {
             read_only(frm);
             update_amount_po(frm);
             fetch_po_date(frm);
         }
     },
-    reference_name: function (frm) {
+    reference_name: function(frm) {
         fetch_po_date(frm);
         fetch_project(frm);
     },
-    custom_type_of_amount: function (frm) {
+    custom_type_of_amount: function(frm) {
         update_amount_po(frm).then(() => {
             if (frm.doc.custom_add_amount_based_on == "Percent") {
                 update_grand_total_percent(frm);
@@ -36,7 +30,7 @@ frappe.ui.form.on("Payment Request", {
             }
         });
     },
-    custom_add_amount_based_on: function (frm) {
+    custom_add_amount_based_on: function(frm) {
         if (frm.doc.custom_add_amount_based_on == "Percent") {
             // clear custom_lumpsum_amount field
             frm.set_value("custom_lumpsum_amount", 0);
@@ -47,7 +41,7 @@ frappe.ui.form.on("Payment Request", {
             frm.set_value("grand_total", 0);
         }
     },
-    custom_percent_value: function (frm) {
+    custom_percent_value: function(frm) {
         if (frm.doc.custom_percent > 100) {
             frappe.msgprint("Percent should not be greater than 100");
             frm.set_value("custom_percent_value", 0);
@@ -55,27 +49,57 @@ frappe.ui.form.on("Payment Request", {
             update_grand_total_percent(frm);
         }
     },
-    custom_lumpsum_amount: function (frm) {
+    custom_lumpsum_amount: function(frm) {
         update_grand_total_lumpsum(frm);
     },
-    validate: function (frm) {
+    validate: function(frm) {
         if (!check_payment_request_pending_for_the_po(frm)) {
             frappe.validated = false; // This line ensures form doesn't submit
         }
         check_grand_total(frm);
     },
+    before_save: function(frm) {
+        if (frm.is_new()) {
+            if (frm.doc.reference_name) {
+                frappe.call({
+                    method: 'graceworks.api.count_payment_requests',
+                    args: {
+                        purchase_order: frm.doc.reference_name
+                    },
+                    callback: function(r) {
+                        if (r.message) {
+                            let count = r.message.count + 1;
+                            frm.set_value('custom_payment_request_number', count);
+                        }
+                    }
+                });
+            }
+        }
+    },
+    after_save: function(frm) {
+        if (!frm._update_approved_advanced_request_called) {
+            frm._update_approved_advanced_request_called = true; // Set the flag
+            frappe.call({
+                method: 'graceworks.api.update_approved_advanced_requests',
+                args: {
+                    payment_request_name: frm.doc.name
+                },
+                callback: function(r) {
+                    if (r.message === "Success") {
+                        frm.refresh_field("custom_approved_advanced_request");
+                    }
+                }
+            });
+        }
+    }
 });
 
 function read_only(frm) {
     // make amount field read only
     if (frm.doc.reference_doctype == "Purchase Order") {
         frm.set_df_property("grand_total", "read_only", 1);
-        if (
-            (!frm.doc.custom_percent_value &&
-                frm.doc.custom_add_amount_based_on == "Percent") ||
-            (!frm.doc.custom_lumpsum_amount &&
-                frm.doc.custom_add_amount_based_on == "Lumpsum Amount")
-        ) {
+        if ((!frm.doc.custom_percent_value && frm.doc.custom_add_amount_based_on == "Percent") ||
+            (!frm.doc.custom_lumpsum_amount && frm.doc.custom_add_amount_based_on == "Lumpsum Amount")) {
             frm.set_value("grand_total", 0);
         }
     }
@@ -218,11 +242,7 @@ function check_grand_total(frm) {
 
 function fetch_po_date(frm) {
     console.log("fetch_po_date");
-    if (
-        frm.doc.reference_doctype === "Purchase Order" &&
-        frm.doc.reference_name &&
-        frm.doc.docstatus !== 1
-    ) {
+    if (frm.doc.reference_doctype === "Purchase Order" && frm.doc.reference_name && frm.doc.docstatus !== 1) {
         console.log("fetch_po_date condition true");
         // fetch the date from the purchase order using the reference name
         frappe.call({
@@ -231,13 +251,41 @@ function fetch_po_date(frm) {
                 doctype: "Purchase Order",
                 name: frm.doc.reference_name,
             },
-            callback: function (r) {
+            callback: function(r) {
                 if (r.message) {
                     frm.set_value("custom_po_date", r.message.transaction_date);
                     const project_value = r.message.items[0].project;
                     frm.set_value("project", project_value);
                 }
             },
+        });
+    }
+}
+
+function fetch_approved_payment_requests(frm) {
+    if (frm.doc.reference_doctype === "Purchase Order" && frm.doc.reference_name) {
+        frappe.call({
+            method: "frappe.client.get_list",
+            args: {
+                doctype: "Payment Request",
+                filters: {
+                    reference_doctype: frm.doc.reference_doctype,
+                    reference_name: frm.doc.reference_name,
+                    docstatus: 1 // Only approved payment requests
+                },
+                fields: ["name", "grand_total"]
+            },
+            callback: function(r) {
+                if (r.message) {
+                    frm.clear_table("approved_advanced_request");
+                    r.message.forEach(pr => {
+                        let child = frm.add_child("approved_advanced_request");
+                        child.custom_payment_request = pr.name;
+                        child.custom_amount = pr.grand_total;
+                    });
+                    frm.refresh_field("approved_advanced_request");
+                }
+            }
         });
     }
 }
