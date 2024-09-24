@@ -26,7 +26,7 @@ frappe.ui.form.on("Purchase Order", {
 function mandatory_fields(frm) {
     // check if frm.doc.name exist in database or not and if doc is saved and exist  then make the fields mandatory
     if (!frm.doc.__islocal) {
-        frm.toggle_reqd("custom_attach_file", true);
+        frm.toggle_reqd("custom_attach_file", false);
     }
 }
 
